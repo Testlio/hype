@@ -1,0 +1,16 @@
+baseurl = "http://replace-this-with-your-hugo-site.com/"
+languageCode = "en-us"
+title = "#testliohype"
+theme = "casper"
+
+[params]
+    hideHUGOSupport = true
+    cover = "images/cover.png"
+    description = "Engineering at Testlio"
+
+    githubName = "testlio"
+    twitterName = "testlio"
+    facebookName = "testlio"
+    instagramName = "testlio"
+
+    customHeaderPartial = "header_end.html"
