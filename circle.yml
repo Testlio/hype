@@ -14,7 +14,7 @@ dependencies:
 
 test:
     override:
-        - hugo -v
+        - hugo -v --buildDrafts
 
 deployment:
     upload:
