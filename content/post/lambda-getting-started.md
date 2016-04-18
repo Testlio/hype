@@ -9,7 +9,6 @@ image = "images/post/lambda-getting-started/cover.jpg"
 share = false
 comments = false
 tags = ["lambdahype"]
-
 +++
 
 In this, the first part of our Lambda posts, we will look at the AWS technologies that make building microservices on Lambda possible - AWS Lambda, AWS API Gateway and AWS CloudFormation<!--more-->
