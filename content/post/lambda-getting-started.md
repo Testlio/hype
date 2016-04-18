@@ -149,35 +149,3 @@ In this post, we introduced the AWS technologies that make up the building block
 Based on our notes, we proposed a service architecture, that would allow us to build a _serverless_ microservice. One that has full control over its own infrastructure, without having to worry about the nitty-gritty of running it.
 
 In the next part, we will discuss implementing this structure in practice and the tools that make it easier and faster to develop such services.
-
-<!-- **STOP**
-
-Keeping the levels apart gives us even more modularity in our service, for example, allowing us to switch out a JSON based API to a XML based one or moving to a different availability-zone by simply redeploying the same CloudFormation stack.
-
-While the AWS services are the building blocks, that are well-defined by Amazon, their combination is left for us to decide. This combination formulates our service architecture - what and how makes up a microservice. In our case, we believe a valid approach is to sandwich all of the components together into a single CloudFormation stack, that then makes up a service.
-
-This means the service contains both the Lambda functions that do the work as well as the API Gateway instance that exposes the Lambdas to the world. By leveraging CloudFormation, we can also add further resources to this service, always making sure that the entire infrastructure that the service needs to operate, leaving out any inter-service communication out of the question, is under its own control.
-
-With this in mind, we can imagine a service codebase, that can contain the following parts:
-
-1. A set of Lambda functions
-2. An API definition that exposes some or all of said Lambda functions through API Gateway
-3. A CloudFormation stack definition, that contains any further resources we may need, for example a DynamoDB table.
-
-There are several benefits to solidifying such an architecture, for example, having all of the configuration as code, allows us to apply good engineering practices on it, such as code review. Similarly, enforcing the common structure allows us to build lots of these services, without having to worry about disparity in architecture or style. This allows people to switch between services and still only focus on the important part - implementing the logic of the service.
-
-In order to enforce the architecture, while also automating its' configuration and help with debugging and development, we have built a few open-source tools that we'll look at next.
-
-## Generator Lambda Tools
-
-At the core of building services, we have a set of [Yeoman](https://yeoman.io) generators, which make adding new resources to a service a breeze. For example, adding a new Lambda function takes a one-line on the CLI:
-
-```
-yo lambda-tools:lambda
-? Lambda function name hello-world
-? Create event.json Yes
-   create lambdas/hello-world/index.js
-   create lambdas/hello-world/event.json
-```
-
-This creates a boilerplate Lambda function, that does looks very much like the one listed above. It is worth noting that the generator also created a stub event file, this can be used to execute the Lambda function in isolation, for example in tests or otherwise. It represents the expected `event` object structure. -->
