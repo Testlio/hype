@@ -21,4 +21,4 @@ deployment:
     upload:
         branch: master
         commands:
-            - $(npm bin)/upload-to-s3 -b hype.testlio.com ./public
+            - upload-to-s3 -b hype.testlio.com ./public
