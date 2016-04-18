@@ -1,4 +1,4 @@
-baseurl = "http://replace-this-with-your-hugo-site.com/"
+baseurl = "https://hype.testlio.com.s3-website-us-east-1.amazonaws.com"
 languageCode = "en-us"
 title = "#testliohype"
 theme = "casper"
