@@ -1,4 +1,6 @@
 machine:
+    node:
+        version: 5.7.0
     environment:
         CIRCLE_BUILD_DIR: $HOME/$CIRCLE_PROJECT_REPONAME
         PATH: $PATH:/$CIRCLE_BUILD_DIR/bin
@@ -8,9 +10,11 @@ machine:
 dependencies:
     pre:
         - bash ./circleci/install-hugo.sh
-        - go get -v github.com/nathany/s3up
+        - npm i cloudfront-invalidate
+        - npm i upload-to-s3
     cache_directories:
         - bin
+        - node_modules
 
 test:
     override:
@@ -20,4 +24,5 @@ deployment:
     upload:
         branch: master
         commands:
-            - s3up -source=public/ -bucket=hype.testlio.com
+            - $(npm bin)/upload-to-s3 -b hype.testlio.com ./public/
+            - $(npm bin)/cloudfront-invalidate -d E1U5NXI8FDEL0F '*'
