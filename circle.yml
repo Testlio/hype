@@ -24,5 +24,5 @@ deployment:
     upload:
         branch: master
         commands:
-            - $(npm bin)/upload-to-s3 -b hype.testlio.com ./public/
+            - $(npm bin)/upload-to-s3 -b hype.testlio.com ./public/ --flatten 0
             - $(npm bin)/cloudfront-invalidate -d E1U5NXI8FDEL0F '/*'
