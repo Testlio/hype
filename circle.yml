@@ -11,7 +11,7 @@ dependencies:
     pre:
         - bash ./circleci/install-hugo.sh
         - npm i cloudfront-invalidate
-        - npm i upload-to-s3
+        - go get -v github.com/nathany/s3up
     cache_directories:
         - bin
         - node_modules
@@ -24,5 +24,5 @@ deployment:
     upload:
         branch: master
         commands:
-            - $(npm bin)/upload-to-s3 -b hype.testlio.com ./public/ --flatten 0
+            - s3up -source=public/ -bucket=hype.testlio.com
             - $(npm bin)/cloudfront-invalidate -d E1U5NXI8FDEL0F '/*'
