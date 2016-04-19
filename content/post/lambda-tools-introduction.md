@@ -13,9 +13,9 @@ tags = ["lambdahype"]
 
 _This is the second part in our series of posts about AWS Lambda backed microservices. Make sure to check out [Part 1]({{< ref "lambda-getting-started.md" >}})._
 
-In the first post, we introduced the building blocks for our services. We also proposed an architecture for our services. The architecture would keep the different layers separated, allowing us to treat each layer individually and offer abstractions tailored specifically for each.
+In this part, we will introduce the tools and libraries that we believe help us enforce the architecture proposed in Part 1. These are [Lambda Tools](https://github.com/testlio/lambda-tools) and [Generator Lambda Tools](https://github.com/testlio/generator-lambda-tools).
 
-In this part, we will introduce the tools and libraries that we believe help us enforce the proposed architecture. These are [Lambda Tools](https://github.com/testlio/lambda-tools) and [Generator Lambda Tools](https://github.com/testlio/generator-lambda-tools).
+<!--more-->
 
 ## Lambda Tools
 
