@@ -11,11 +11,11 @@ comments = false
 tags = ["lambdahype"]
 +++
 
-_This is the second part in our series of posts about AWS Lambda backed microservices. Make sure to check out [Part 1]({{< ref "lambda-getting-started.md" >}})._
-
 In this part, we will introduce the tools and libraries that we believe help us enforce the architecture proposed in Part 1. These are [Lambda Tools](https://github.com/testlio/lambda-tools) and [Generator Lambda Tools](https://github.com/testlio/generator-lambda-tools).
 
 <!--more-->
+
+_This is the second part in our series of posts about AWS Lambda backed microservices. Make sure to check out [Part 1]({{< ref "lambda-getting-started.md" >}})._
 
 ## Lambda Tools
 
@@ -95,7 +95,7 @@ The deployment script also allows deploying to a different stage _(default being
 
 The deployment script can also be used directly from a CI (assuming appropriate IAM permissions) by simply including a line similar to this one.
 
-```
+```sh
 lambda deploy -s production -e NODE_ENV=production
 ```
 
@@ -113,7 +113,7 @@ Making sure these assumptions hold, and do so without forcing engineers to learn
 
 With the help of the generators, setting up a new service is as easy as running `yo lambda-tools` and answering a few questions.
 
-```
+```sh
 yo lambda-tools
 ? Service name example-service
 ? Service description Demonstrating the generators
