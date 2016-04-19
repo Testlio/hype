@@ -1205,7 +1205,7 @@ footer.post-meta .post-date {
    ========================================================================== */
 
 .post-head.main-header {
-    height: 55vh;
+    height: 40vh;
     min-height: 180px;
 }
 
@@ -1494,7 +1494,7 @@ footer.post-meta .post-date {
         box-sizing: border-box;
         height: auto;
         min-height: 240px;
-        height: 60vh;
+        height: 40vh;
         padding: 15% 0;
     }
 
@@ -1578,7 +1578,7 @@ footer.post-meta .post-date {
     }
 
     .post-head.main-header {
-        height:45vh;
+        height:40vh;
     }
 
     .tag-head.main-header,
