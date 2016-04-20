@@ -6,6 +6,7 @@ theme = "casper"
 [params]
     hideHUGOSupport = true
     cover = "images/cover.png"
+    ogCover = "images/cover-og.png"
     description = "Engineering at Testlio"
 
     googleAnalyticsUserID = "UA-36245654-1"
