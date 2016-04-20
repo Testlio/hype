@@ -1,12 +1,10 @@
 +++
-date = "2016-04-16T09:08:13+03:00"
-draft = true
+date = "2016-04-20T09:00:00+03:00"
 title = "Lambda Backed Microservices (Part 1)"
 slug = "lambda-backed-microservices-part-1"
 author = "henri"
 
 image = "images/post/lambda-getting-started/cover.jpg"
-share = false
 comments = false
 tags = ["lambdahype"]
 +++
