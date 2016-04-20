@@ -9,6 +9,8 @@ theme = "casper"
     description = "Engineering at Testlio"
 
     googleAnalyticsUserID = "UA-36245654-1"
+    logo = "images/icon.png"
+
 
     githubName = "testlio"
     twitterName = "testlio"
