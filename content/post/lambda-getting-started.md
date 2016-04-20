@@ -11,18 +11,18 @@ tags = ["lambdahype"]
 
 In this, the first part of our Lambda posts, we will look at the AWS technologies that make building microservices on Lambda possible - AWS Lambda, AWS API Gateway and AWS CloudFormation<!--more-->
 
-_It is worth noting that throughout this series, we use Node.js as our reference implementation. AWS Lambda does also natively support Python and Java, which some of the concepts we discuss can be translated to._
+_It is worth noting that throughout this series, we use Node.js as our reference implementation. AWS Lambda also natively support Python and Java, which some of the concepts we discuss also apply._
 
 ## AWS Lambda
 
 > Run code without thinking about servers.
 > Pay for only the compute time you consume.
 
-That's how AWS [itself positions Lambda](https://aws.amazon.com/lambda/). We like to think of Lambda as a way to focus on business logic and have someone else handle the infrastructure behind it. In reality this involves writing small functions, that are triggered by some **event**, do some **processing** and produce some **output**.
+That's how AWS [itself positions Lambda](https://aws.amazon.com/lambda/). We like to think of Lambda as a way to focus on business logic and have someone else handle the infrastructure supporting it. In reality this involves writing small functions, triggered by some **event**, doing some **processing** and producing some **output**.
 
-The real power comes from how AWS runs these functions. Every time a suitable event is triggered, AWS loads the correct Lambda function, allocates some compute time to it and runs it. This means we only ever pay for the time our functions run, not for the time they spent waiting for the next event.
+The real power comes from how AWS runs these functions. Every time a suitable event is triggered, AWS loads the correct Lambda function, allocates some compute time and runs it. This means we only ever pay for the time our functions run, not for the time they spend waiting for the next event.
 
-The anatomy of a Lambda function is straightforward, a simple "Hello, World!" function can be reduced down to 3 lines of code:
+The anatomy of a Lambda function is straightforward, a simple _"Hello, World!"_ function can be reduced down to 3 lines of code:
 
 ```js
 exports.handler = function(event, context) {
@@ -30,13 +30,13 @@ exports.handler = function(event, context) {
 };
 ```
 
-Let's walk through this structure. A Lambda function running on Node.js is a [module](https://nodejs.org/api/modules.html) that has a function `handler`. This function is the main entry point for the Lambda function, taking two parameters  - `event` and `context`. _(We won't discuss the new callback based handlers added for Node.js 4.3 runtime on Lambda)_
+Let's walk through this structure. A Lambda function running on Node.js is a [module](https://nodejs.org/api/modules.html) with a function `handler`. This function is the main entry point for the Lambda function, taking two parameters  - `event` and `context`. _(We won't discuss the new callback based handlers added for Node.js 4.3 runtime on Lambda)_
 
-The `event` parameter is the event that triggered the function, it often contains input parameters/data that the Lambda is expected to handle. The `context` parameter contains an object that handles the lifetime of the Lambda function.This way we can run asynchronous code in our handler and then call `succeed` or `fail` on the `context` object to finish the Lambda function execution.
+The `event` parameter contains the event that triggered the function. It often contains input parameters/data that the Lambda is expected to handle. The `context` parameter contains an object that handles the lifetime of the Lambda function. This way we can run asynchronous code in our handler and then call `succeed` or `fail` to finish the execution.
 
-It is important to understand that Lambda functions, as any function in general, can have multiple outcomes, that can be generalised to two categories - success or failure. Failures typically include throwing exceptions/errors or returning a value that was not expected, while success in general is optionally returning a result of the computation. These two categories of outcomes are reflected on the `context` object.
+It is important to understand that Lambda functions, as any function in general, can have multiple outcomes. These can be generalised to two categories - success or failure. Failures typically include throwing exceptions/errors or returning a value that was not expected. Success, however, is optionally returning a result of the computation. These two categories of outcomes are reflected on the `context` object.
 
-Lambda functions can be tied to various different event sources, from [DynamoDB tables](https://aws.amazon.com/dynamodb/) to [S3 buckets](https://aws.amazon.com/s3/) to [AWS Kinesis Streams](https://aws.amazon.com/kinesis/). The rule always being that there is an event that triggers the Lambda function.
+Lambda functions can be tied to various different event sources, from [DynamoDB tables](https://aws.amazon.com/dynamodb/) to [S3 buckets](https://aws.amazon.com/s3/) to [AWS Kinesis Streams](https://aws.amazon.com/kinesis/). The rule of thumb being that there is an event that triggers the Lambda function.
 
 So, how would we go about running one of these Lambda functions on a HTTP request? Enter [API Gateway](https://aws.amazon.com/api-gateway/).
 
@@ -45,7 +45,7 @@ So, how would we go about running one of these Lambda functions on a HTTP reques
 API Gateway acts as the front-door for AWS services, allowing mapping HTTP requests to calls to services such as EC2 or even another HTTP API. It also has native support for AWS Lambda, making it ideal for creating an HTTP API that is completely backed by Lambda.
 
 As we discussed, Lambdas are always executed in response to some event, with the `event` object containing input data. API Gateway
-handles mapping a HTTP request to said event, and then also mapping the result of the Lambda function back to a suitable HTTP response.
+handles mapping a HTTP request to an event, and then also mapping the result of the Lambda function back to a suitable HTTP response.
 
 API Gateway can be set up via the AWS console, however, the more interesting/scalable approach is to use [Swagger](http://swagger.io/specification/) (now also known as OpenAPI) to define our API and tie endpoints to Lambda functions.
 
@@ -92,11 +92,11 @@ For example, if we wanted to expose our little "Hello, World!" Lambda function o
 }
 ```
 
-As you may have noticed, the configuration is excruciatingly explicit, we have to declare all possible HTTP response status codes, response body schemas and headers. We also have to provide a custom mapping from HTTP request to Lambda function event, as can be seen in the `requestTemplates` key, this is then complemented by the `responseTemplates` key that contains a mapping from Lambda function return value to HTTP response.
+As you may have noticed, the configuration is excruciatingly explicit, we have to declare all possible HTTP response status codes, response body schemas and headers. We also have to provide a custom mapping from HTTP request to Lambda function event, as can be seen in the `requestTemplates` key. This is then complemented by the `responseTemplates` key that contains a mapping from Lambda function return value to HTTP response.
 
 While the explicit nature of this format is good for making sure API Gateway does exactly what we want it to, it comes with a **steep learning curve** and is **error-prone** when typed up manually.
 
-However, having our entire API in the Swagger format allows us to import it into API Gateway wholesale, reducing the repeated setup cost. Furthermore, the same file can also be used to generate documentation for our API, which comes in handy with any service that wants to expose a public API.
+However, having our entire API in the Swagger format allows us to import it into API Gateway wholesale, reducing the repeated setup cost. Furthermore, the same file can also be used to generate documentation for our API, which comes in handy with any service that wants to expose a public API. In theory the Swagger specification can also be used for integration tests, look forward to a post on that topic.
 
 In terms of our goal of not having to deal with servers or their configuration, API Gateway helps us out by quite a lot. Most importantly, it allows us to determine the operating conditions for the API (rate-limiting, caching, authentication), while also taking care of logging by pushing access logs to [AWS CloudWatch](https://aws.amazon.com/cloudwatch/).
 
@@ -104,7 +104,7 @@ Having written a set of Lambda functions, put together an API in a Swagger file,
 
 ## AWS CloudFormation
 
-> Infrastructure as parameterised code that's declarative and flexible
+> Infrastructure as parameterised code, that's declarative and flexible
 
 While AWS allows configuring all of it's services by hand, either through the CLI, the numerous SDKs or the web console, it is often error-prone and tedious to do so. For example, documenting what specific setup a service needs, and then following that documentation every time a deployment occurs, takes far too much valuable engineering time.
 
@@ -114,13 +114,13 @@ The template file itself is another JSON file, the format for which is [exhausti
 
 As with the Swagger file, the stack template can also end up being several hundred lines long, so I've omitted an example from this post. I would, however, like to point out a trend here - with each level in our stack we have gone from more abstract to more concrete.
 
-Going from the 3 line Lambda function, to the 20 something line Swagger configuration, to a potentially hundred lines of CloudFormation stack template. With each successive step, we have taken more control over our infrastructure, gained more configurability, at the cost of having to understand it and ensuring its' correctness.
+Going from the 3 line Lambda function, to the 20 something line Swagger configuration, to a potentially hundred lines of CloudFormation stack template. With each successive step, we have taken more control over our infrastructure, gained more configurability, at the cost of having to understand the templates and ensuring their correctness.
 
-We should keep this in mind going forward, as understanding each part individually, allows us to make individual abstractions and tooling for each. Similarly, keeping the levels apart gives us more modularity in the system.
+We should keep this in mind going forward, as understanding each part individually allows us to make individual abstractions and tooling for each. Similarly, keeping the levels apart gives us more modularity in the system.
 
 ## Proposed Architecture
 
-We have 3 building blocks, levels, from AWS that we can use to design the architecture of our service. The blocks themselves are well-defined by AWS, however, the way they are combined is left up to us.
+We have 3 building blocks, from AWS that we can use to design the architecture of our service. The blocks themselves are well-defined by AWS, however, the way these are combined is left up to us.
 
 This brings us to the our proposed service architecture - a layered cake, where each layer knows what's above it, but not what's below it.
 
@@ -134,10 +134,10 @@ With this in mind, we can imagine a service codebase, that can contains the foll
 
 There are several properties such an architecture has that are worth noting:
 
-1. **Everything is code**. Engineers love code, as it can be _diffed_ and reviewed, it can be kept under source control, it can be trusted.
-2. **It is generic**. It doesn't matter whether the service in question deals with users, photos or comments, the structure can always be enforced.
+1. **Everything is code**. Engineers love code. It can be _diffed_ and reviewed. It can be kept under source control. It can be trusted.
+2. **It is generic**. It doesn't matter whether the service in question deals with users, photos or comments, the architecture can always be enforced.
 3. **It can benefit from automation**. As mentioned earlier, we can automate the tedious parts, such as writing the API definition or CloudFormation stack template.
-4. **It follows separation-of-concerns**. If 3. is applied correctly, engineer dealing with the Lambda functions does not need to know about the guts of the CloudFormation stack.
+4. **It follows separation-of-concerns**. If the third point is applied correctly, engineer dealing with the Lambda functions does not need to know about the guts of the CloudFormation stack.
 
 ## Conclusion
 
