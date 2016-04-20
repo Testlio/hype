@@ -3,6 +3,8 @@ languageCode = "en-us"
 title = "#testliohype"
 theme = "casper"
 
+googleAnalytics = "UA-36245654-1"
+
 [params]
     hideHUGOSupport = true
     cover = "images/cover.png"
