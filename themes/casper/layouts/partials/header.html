@@ -11,6 +11,7 @@
 
     {{ if .IsPage }}
   	<meta property="og:type" content="article" />
+    <meta property="og:description" content="{{ .Summary }}">
 
     {{ if .Params.image }}
     <meta property="og:image" content="{{ .Site.BaseURL }}{{ .Params.image }}">
@@ -23,11 +24,12 @@
     {{ end }}
     {{ else }}
     <meta property="og:type" content="website" />
+    <meta property="og:description" content="{{ .Site.Params.description }}">
 
     {{ if .Site.Params.cover }}
     <meta property="og:image" content="{{ .Site.BaseURL }}{{ .Site.Params.cover }}">
     {{ end }}
-    
+
     {{ end }}
 
   <title>
