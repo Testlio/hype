@@ -145,4 +145,4 @@ In this post, we introduced the AWS technologies that make up the building block
 
 Based on our notes, we proposed a service architecture, that would allow us to build a _serverless_ microservice. One that has full control over its own infrastructure, without having to worry about the nitty-gritty of running it.
 
-In the next part, we will discuss implementing this structure in practice and the tools that make it easier and faster to develop such services.
+In the [next part]({{< ref "lambda-tools-introduction.md" >}}), we will discuss implementing this structure in practice and the tools that make it easier and faster to develop such services.
