@@ -3,9 +3,9 @@ author = "henri"
 comments = false
 date = "2016-04-25T09:00:00+03:00"
 title = "Lambda Backed Microservices (Part 3)"
-draft = true
 image = "images/post/lambda-foundation-introduction/cover.jpg"
 
+share = true
 slug = "lambda-backed-microservices-part-3"
 tags = ["lambdahype"]
 +++
