@@ -21,7 +21,7 @@ _This is the fourth part in our series of posts about AWS Lambda backed microser
 
 ## Background
 
-The service we are going to build in this post and all of its source code is available on [GitHub](). You can try out the service by directly talking to [AWS API Gateway]() or by using the front-end app hosted at [demo.testlio.com](https://demo.testlio.com).
+The service we are going to build in this post and all of its source code is available on [GitHub](https://github.com/Testlio/lambda-demo). You can try out the service by directly talking to [AWS API Gateway](https://opmxhhi3x1.execute-api.us-east-1.amazonaws.com/dev) or by using the front-end app hosted at [demo.testlio.com](http://demo.testlio.com).
 
 The service we are going to build is a straightforward one, consisting of two models - questions and answers. The service will have two endpoints, one for getting a random question and the other for answering a question. When answering a question, the service also allows specifying a callback URL, which will be called when the answer has been stored. The last part, although functionally serving little purpose, demonstrates how we can attach Lambda functions to DynamoDB streams.
 
@@ -568,6 +568,6 @@ And once we've done this, we can open up our RequestBin and see that the callbac
 
 In this, the final post of our first [#lambdahype](/tags/lambdahype) series, we combined everything we learned in the previous part to build our first Lambda backed microservice. The service had two endpoints, two DynamoDB tables and made use of DynamoDB streams to trigger a callback whenever a new answer was added.
 
-As mentioned before, you can try out the service at [demo.testlio.com](https://demo.testlio.com) and go through the source code of the service in [GitHub](). There are some nuances that we didn't cover in the post, such as CORS support for the service. The published source code includes all these, and the general gist of adding it involves executing another generator for a couple of times.
+As mentioned before, you can try out the service at [demo.testlio.com](http://demo.testlio.com) and go through the source code of the service in [GitHub](https://github.com/Testlio/lambda-demo). There are some nuances that we didn't cover in the post, such as CORS support for the service. The published source code includes all these, and the general gist of adding it involves executing another generator for a couple of times.
 
 All in all, we are very eager to see what you think of our approach to serverless microservices. Feel free to submit issues and pull requests to any of our [open-source](https://github.com/testlio/lambda-tools) [repositories](https://github.com/testlio/lambda-foundation) for [Lambda](https://github.com/testlio/generator-lambda-tools). Long live **#lambdahype**!
