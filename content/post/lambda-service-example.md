@@ -1,9 +1,8 @@
 +++
 date = "2016-04-28T09:00:00+03:00"
-share = false
 draft = true
 
-image = "images/post/lambda-service-example/cover.png"
+image = "images/post/lambda-service-example/architecture.png"
 comments = false
 
 title = "Lambda Backed Microservices (Part 4)"
