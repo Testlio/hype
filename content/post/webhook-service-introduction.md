@@ -7,164 +7,165 @@ comments = false
 title = "Building webhooks with lambdas"
 slug = "building-webhooks-with-lambdas"
 author = "mikk"
-tags = ["lambdahype", "dynamodb", "webhook"]
+tags = ["lambdahype", "dynamodb", "webhooks"]
 +++
 
-Recently we implemented a new inner service called webhook service. In this post we are going to discuss how and why we implemented that service as we did. 
+While [last time]({{< ref "lambda-service-example.md" >}}) we focused on the architecture of a service by presenting a simple made-up example, this time we'll look at a real-world service we recently built to handle webhooks. In this post we are going to discuss why and how we did this.
 
 <!--more-->
 
 ### What are webhooks?
 
-> A webhook in web development is a method of augmenting or altering the behavior of a web page, or web application, with custom callbacks. These callbacks may be maintained, modified, and managed by third-party users and developers who may not necessarily be affiliated with the originating website or application. The term "webhook" was coined by Jeff Lindsay in 2007 from the computer programming term Hook. [wikipedia][wikipedia]
+First, a bit of background, according to [Wikipedia][wikipedia], webhooks can be described as
 
-**TL;DR** We could say webhooks are user-defined HTTP callbacks that are triggered by a specific event.
+> A webhook in web development is a method of augmenting or altering the behavior of a web page, or web application, with custom callbacks. These callbacks may be maintained, modified, and managed by third-party users and developers who may not necessarily be affiliated with the originating website or application. The term "webhook" was coined by Jeff Lindsay in 2007 from the computer programming term Hook.
 
-### How are we going to use the given hooks?
+In short, we could say webhooks are user-defined HTTP callbacks that are triggered by a specific event. In a way, webhooks are like push notifications, used between servers to avoid polling and keep data up to date as it is changed by various events.
 
-For us, [Testlio][testlio], webhooks are a integral part of our infrastructure. We use them for variety of different reasons, for example:
+### How are we going to use webhooks?
 
-- integrations with third party systems, such as syncing issues to and from clients issue trackers
-- reacting to different service defined events, such as creating a new project
-- etc
+At [Testlio][testlio], webhooks are an integral part of our infrastructure. We use them for variety of different use cases, for example:
+
+- Integrations with third party systems, such as syncing issues to and from clients issue trackers
+- Reacting to different service defined events, such as creating a new project
+- Connecting services while avoiding [tight coupling](coupling)
+- etc.
 
 ### Requirements for webhook service
 
-As said earlier then when we are talking about the webhook service we are talking about one of core services that will be used by multitude of other services. Thus we have to keep a few key things in mind:
+As said earlier, when talking about a webhook service, we talk about one of our core services. One that will be used by multitude of other services. Thus we have to keep a few key requirements in mind:
 
-- we **MUST** have a way to turn off triggering for a specific service (e.g. in case it's secret is exposed)
-- we **MAY** have unlimited different consumers for one event
-- each consumers **MAY** have a specified secret key with what we sign all the requests to that consumer
-- if provided with a secret key, then that secret **MUST** be encrypted before we store it
-- if provided with a secret key, then we **MUST** encrypt the sent request with that key
-- at all times we **MUST** keep the clients secret encrypted
+- We **MUST** have a way to disable triggering for a specific agent (e.g. in case its' API key is leaked)
+- We **MAY** have unlimited different listeners for one event
+- Each listener **MAY** have specified a secret key, which we'll need to use when signing the request sent to said listener
+- When provided with a secret key, it **MUST** be encrypted before storing it
+- When provided with a secret key, it **MUST** be used for signing the sent request
+- At all times, the listener secrets **MUST** be kept encrypted (e.g when stored in a database)
 
 ### Architecture of the service
 
-When building this service we decided to use the following technologies:
+In order to satisfy these requirements, whilst also keeping in line with the service architecture we have chosen, we decided to base our service on the following technologies:
 
-- [Dynamodb][dynamodb] tables for holding our information
-- [Api gateway][apigateway] to expose public endpoints
-- [KMS][kms] for encrypting and decrypting secrets provided by consumers
+- [DynamoDB][dynamodb] tables for storing data
+- [API Gateway][apigateway] to expose a public API
+- [KMS][kms] for encrypting and decrypting secrets provided by listeners (without having to store the private key in the service)
 
-The complete architecture of the service looks like this:
+Diagrammatically, the complete architecture of the service looks like this:
 
-![webhook architecture](/images/post/webhook-service/architecture.png)
+![Webhook service architecture](/images/post/webhook-service/architecture.png)
 
-Here we can see two different main parts of our service:  
+We can clearly identify two separate flows in our service:
 
-1. hook registering that deals with registering consumers.
-2. event triggering that deals with making the actual requests.
+1. Registering a hook, which deals with registering new listeners
+2. Triggering an event, which deals with making the actual requests
 
-As you can see then we decided to link those parts together by using dynamodb streams and lambdas. There are a few reasons behind that:  
+As you can see, the only bridging component between the two flows is a DynamoDB table that stores information about listeners. The two flows themselves are built upon DynamoDB streams and Lambda functions. This approach has several appealing factors:
 
-- Constant speed for our gateway requests. When using an approach we can always say that endpoints that sit behind our api gateway have pretty much constant response time.   
-When triggering an event then they only have to worry about writing ONE entry to one table. The only real exception is the endpoint that will list out all the event listeners.
-- Separation of concerns. When building a service around dynamodb streams then we can easily and elegantly separate functionality into smallest functional pieces possible. This gives us a huge benefit in terms of understanding whats going and fixing bugs.
-- Visibility. Since we built our service out of small "blocks" we can easily see what each of those blocks are doing. This also makes the potential bug tracking much easier.
-- Scalability. We can set read and write throughput on each stream separately. We can also set scaling triggers for each api endpoint separately. This means that we can scale things more precisely, which also means that its cheaper.
-- Stability. If something happens with the streams we can be sure that when they are restored then the action continues where it left off. Sure, we might lose a minute or so, but if the stream is back up then we always know that the events will be sent in the correct order.
+- Our public API requests should offer constant response times. By using this approach, our event triggering API endpoint is independent of the request making procedure, meaning irregardless of the number of listeners for a given event, the response time for triggering an event should be the same
+- We get implicit rate-limiting from our DynamoDB tables, meaning if someone attempts to send out too many events at once, they will be rate-limited by the DynamoDB table
+- Separation of concerns - Building a service around DynamoDB streams means we can easily and elegantly separate functionality into the smallest possible functional piece. This gives a huge benefit in terms of understanding and analysing our service
+- Visibility - Since our service is built out of small functional "blocks", we can easily see what each of those blocks are doing. This simplifies bug tracking by quite a bit
+- Scalability - We can set the throughput on each stream separately. We can also set scaling triggers for each API endpoint separately. This means we can scale the service more precisely, which allows for more precise cost optimisation
+- Stability - If something happens to the streams, we can be sure, once restored, the actions continue where the stream left off. Sure, we might lose a couple of minutes, but once the stream is back up, the events will still be sent out in the correct order
 
-Now lets take a closer look on two two main different part of our systems.
+Now, let's dive in and take a closer look at the two main flows of our service.
 
 #### Hook registering
 
-![webhook architecture hook registering](/images/post/webhook-service/architecture-hook-registering.png)
+![Webhook architecture - Hook registering](/images/post/webhook-service/architecture-hook-registering.png)
 
-Its important to note here that when we say **consumer** then we mean another Testlio service.
+_It's important to note, when we speak about a **consumer**, we generally mean another Testlio backend microservice._
 
-Hook registering contains of two major steps:  
+Hook registering contains two major steps:  
 
-1. Generating a unique hash about the event. For that we take the given event to register and generate a unique hash based on the information about the consumer (api-key among other things) and the event itself.  
-This step is **essential** in order to protect our consumers from potential vulnerabilities where the attacker could just guess the event names.
-2. Saving the generating hash with given callbacks and encrypted secret key to a specified dynamodb table.
+1. Generating a unique hash for a unique event. For this we take the event type the consumer wishes to expose, and combine it with information we have on the consumer (API key among other things) to generate a unique hash. This step is **essential**, in order to protect our consumers from potential vulnerabilities, where the attacker could just guess the event types.
+2. Saving the generated hash with given callbacks and encrypted secret key to a DynamoDB table.
 
 Those two steps are two endpoints:
 
-1. endpoint that calculates event hashes based on the information about the consumer and the event itself.
-2. endpoint that takes in the given calculated hash and saves it as a consumer trigger event.
+1. Endpoint that generates the event hashes
+2. Endpoint that takes in an event hash, information about the callback and saves it as a listener for a specific event
 
-The main reasoning behind that is that a service that consumes webhooks **MUST NOT** save event hashes.  
-Instead if a service wants to trigger an event it **MUST** always regenerate a new hash of an event.  
+The main reason for separating these steps into separate endpoints is simple. The consumer **MUST NOT** store the event hashes. Instead, if a service wants to trigger an event, it **MUST** always regenerate a hash for the event.
 
-This is done so for security purposes. For instance if an service access key is exposed for some reason we can quickly change it and since the api-key is a part of the hash then those old events can never be triggered again.
+This is again done for protection, by not storing the event type hash, it is easier for us to invalidate a specific consumer API key. It also means that even through changes to the hashing algorithm, we can maintain an accurate list of all existing listeners for a specific event. So, if for example, a service needs to revoke it's API key, we can simply generate a new one, which it can immediately use to fire off events that will still be delivered to all of its already existing listeners.
 
-For saving the actual event and consumer data to dynamodb we also use KMS to provide encryption for the clients key (if provided).  
-We wouldn't want to save unencrypted keys now, would we?!
+For saving the actual event and consumer data to DynamoDB we use KMS to provide encryption for the listener secret (if provided with any). We wouldn't want to save unencrypted keys now, would we?!
 
-So to recap:  
+So, in short the hook registering flow consists of:
 
-- Hook endpoint that is tied to [api gateway][apigateway]
-- [Lambda function][lambda] for hashing the request 
-- [KMS][kms] for encrypting clients secret key (IF PROVIDED)
-- [Lambda function][lambda] for saving the event and consumer to dynamo table
-- [Dynamodb][dynamodb] table for saving the consumers
+- A hook endpoint that is tied to [API Gateway][apigateway]
+- A [Lambda function][lambda] that generates hashes for event types
+- A listener registration endpoint in [API Gateway][apigateway]
+- A [Lambda function][lambda] for saving the event and listener data to DynamoDB
+- [KMS][kms] for encrypting listener secret key (if provided)
+- A [DynamoDB][dynamodb] table for saving the listeners
 
 That is the first step of our service - registering hook listeners.
 
 #### Event triggering
 
-![webhook architecture event triggering](/images/post/webhook-service/architecture-event-triggering.png)
+![Webhook architecture - Event triggering](/images/post/webhook-service/architecture-event-triggering.png)
 
-Now for the tricky part. Event triggering logic.  
-Event triggering consist of multiple different steps:  
+The second, more tricky, part of the service is the event triggering flow. Event triggering consists of multiple different steps:
 
-1. Receiving the given event from the requester.
-2. Saving the received event to a dynamodb table. For transparency sake we save all the events that we receive. This gives us potential *replay* possibilities as well as a really easy way to trace actual bugs.
-3. Fetching events out of the aforementioned and checking if there are any listeners for the given event. In case there are listeners to the received event, then we sign the event and save the request object to the requests table.
-4. Fetching saved events out of the requests table and actually making the given HTTP requests. 
-5. Saving request responses back to the requests table.
+1. Receiving the event from the consumer
+2. Saving the received event to a DynamoDB table. For transparency's sake, we save all events that we receive. This gives us the possibility to *replay* events, which is another way to track down bugs
+3. Fetching events out of the aforementioned DynamoDB table and checking if there are any listeners for them. If there are listeners for the received event, then we sign the event and save the request object to a separate requests table
+4. Processing saved requests from the requests table and making the actual HTTP requests
+5. Saving the HTTP request responses back to the requests table
 
+For these steps we need the following:
 
-For those steps we need the following this:  
+- A triggering endpoint on [API Gateway][apigateway]
+- A [DynamoDB][dynamodb] table with saved listeners
+- A [Lambda function][lambda] that saves the received event to the events DynamoDB table
+- A [Lambda function][lambda] that sits on the events table stream and generates the actual request objects for the event
+- A [KMS][kms] library that decrypts our previously encrypted listener secret and signs the request with it
+- A [DynamoDB][dynamodb] table for saving the outgoing requests
+- A [Lambda function][lambda] that sits on the requests table stream and sends out the given requests, saving the responses back to the same table
 
-- Hook endpoint that is tied to [api gateway][apigateway]
-- [Dynamodb][dynamodb] table with saved consumers
-- [Lambda function][lambda] that saves the received event to events dynamodb table
-- [Lambda function][lambda] that sits on events table stream and will generate actual request objects from that given event
-- [KMS][kms] library that decrypts our previously encrypted clients secret and encrypt the request with that 
-- [Dynamodb][dynamodb] table where request objects are saved to
-- [Lambda function][lambda] that sits on requests table and will actually send out the given requests and save the responses back to the given table
-
-Most of those steps are quite plain and simple. They are just lambda functions that get triggered by either an api-gateway call or a dynamodb stream.  
-However as with all good things there are exceptions and the next chapter will briefly go over that.
+Most of these steps are quite straightforward. They are just Lambda functions that get triggered by either an API Gateway endpoint or by a DynamoDB stream.
+However, there is one exception, which we'll look into now.
 
 ##### Request sending lambda
 
 Most of our lambda functions are quite straight forward, but there is one that I would like to talk a bit more about - the request sending lambda.
-For a quick recap:
 
-Request sending lambda is the lambda that sits on requests table, listens to new item adding to the table and will trigger the same amount of requests. It is also responsible about tracking the requests responses.
+This Lambda function is in charge of executing the outgoing HTTP requests. It is connected to the requests DynamoDB table via its' stream, listening to new rows being added and triggering a request for each of those. It is also responsible for tracking the HTTP responses for said requests.
 
-Now here things get hairy and there are a few reasons behind that:
+There are a few caveats to this:
 
-1. this lambda sits on stream
-2. this lambda triggers requests
-3. request can fail
-4. request responses must be saved regardless of the response status
+1. The Lambda function sits on a DynamoDB stream
+2. The Lambda function triggers HTTP requests
+3. HTTP requests are known to fail
+4. HTTP request responses must be saved irregardless of the response status
 
-The most important bit from that list is the third point "request can fail". This means that we have to dabble around with our architecture a bit, otherwise we might shoot ourselves in the foot.  
-Main reason for that is the fact that there is a *small* undocumented feature with dynamodb streams:
+The most important bit from that list is the third point - _HTTP requests are known to fail_. This means, we have to dabble around with our architecture a bit, otherwise we might shoot ourselves in the foot quickly. The problematic part lies in an undocumented _feature_ of DynamoDB streams:
 
-> If a lambda that sits on a dynamodb stream **SHOULD** exit with an error then the given lambda will be tried again.
+> If a Lambda function that sits on a DynamoDB stream **SHOULD** exit with an error, then the given Lambda function will be tried again.
 
-This means that we have to be a bit more careful, otherwise we could write ourselves in a deadlock, where one patch event will get sent over and over again because of the failing lambda. 
+This means the Lambda function that handles incoming events from the DynamoDB table stream should never fail, as otherwise we can end up in a deadlock, where one batch of events will get sent over and over again because of the failing Lambda function.
 
-For us the solution for that problem was quite a *cool* one (if I may say so). The solution was: 
+The solution we came up with is actually quite a *cool* one - _if I may so myself_.
 
-- lambda that sits on the stream will receive as many new entities from dynamodb table as possible. 
-- it will then check how many different images it received
-- if the amount of images was higher than 1 then it would trigger a new lambda function N times (where N is the amount of entities received)
-- after triggering the new lambda functions this lambda will ALWAYS successfully exit
+- Lambda function sitting on the DynamoDB stream will receive as many new images from DynamoDB table as possible
+- The function will then check how many different images it received and recursively trigger a new Lambda function N times _(where N is the amount of images received)_
+- After triggering the new Lambda functions the stream Lambda function will **ALWAYS** successfully exit
 
-With this solution we can always be assured that we trigger as many requests that we can in the shortest amount of time possible.  
-Also we can be sure that the new patch of requests comes in each and every time.
+With this approach we can rest assured that we trigger as many requests as we are asked, in the shortest possible time. Furthermore, we can also be sure that with each invocation of our stream, a new batch of requests comes in. Finally, the Lambda function that sends out the HTTP request is safe to fail, as in the worst case, we simply have no response written back to our requests DynamoDB table.
+
+In the future we could build a periodic handler that can retry requests that seem to have not succeeded, or offer the option for the user to retrigger a particular request.
 
 ### Conclusion
 
-For us it seems that using things like lambdas and event based request triggering is the best possible solution for building something like webhooks. We are really - really pleased to see how the current stack behaves and how easy it is to actually implement the said feature. 
+In this post we looked at a real world example of a microservice built entirely on top of Lambdas and other AWS technologies. The domain for the service, webhooks, is a highly event driven one, which fits perfectly with our chosen approach.
 
-Really dont know what to write here though...
+We described ways to ensure certain performance characteristics, for example, how event triggering always appears to take near constant time. Furthermore, we analysed how parts of our service interact with one another, what safeguards can be put into place to ensure the stability of the service, as well as the integrity of both data and order of operations.
+
+It is important to note that this service was one of the first to fully embrace the architecture we have proposed for serverless microservices - you can read more about that in [previous posts]({{< ref "lambda-getting-started.md" >}}).
+
+We are really pleased with how easy it was for us to build something as complex as this service on top of the architecture, we are really looking forward to building even more complex ones next. Make sure to keep an eye on this blog for more posts on how we build things and as always, make sure to let us know what you think on [Twitter](twitter)!
 
 [lambda]: http://docs.aws.amazon.com/lambda/latest/dg/welcome.html
 [dynamodb]: https://aws.amazon.com/documentation/dynamodb/
@@ -172,3 +173,5 @@ Really dont know what to write here though...
 [apigateway]: https://aws.amazon.com/api-gateway
 [wikipedia]: https://en.wikipedia.org/wiki/Webhook
 [kms]: https://aws.amazon.com/kms/
+[coupling]: https://en.wikipedia.org/wiki/Coupling_(computer_programming)
+[twitter]: https://twitter.com/testlio
