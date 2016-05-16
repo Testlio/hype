@@ -81,16 +81,16 @@ Hook registering contains two major steps:
 1. Generating a unique hash for a unique event. For this we take the event type the consumer wishes to expose, and combine it with information we have on the consumer (API key among other things) to generate a unique hash. This step is **essential**, in order to protect our consumers from potential vulnerabilities, where the attacker could just guess the event types.
 2. Saving the generated hash with given callbacks and encrypted secret key to a DynamoDB table.
 
-Those two steps are two endpoints:
+For those two steps there are two endpoints:
 
 1. Endpoint that generates the event hashes
 2. Endpoint that takes in an event hash, information about the callback and saves it as a listener for a specific event
 
-The main reason for separating these steps into separate endpoints is simple. The consumer **MUST NOT** store the event hashes. Instead, if a service wants to trigger an event, it **MUST** always regenerate a hash for the event.
+The main reason for separating these steps into separate endpoints is simple. The consumer **MUST NOT** store the event hashes. Instead, if a service wants to trigger an event, it **MUST** always regenerate the hash for that event.
 
-This is again done for protection, by not storing the event type hash, it is easier for us to invalidate a specific consumer API key. It also means that even through changes to the hashing algorithm, we can maintain an accurate list of all existing listeners for a specific event. So, if for example, a service needs to revoke it's API key, we can simply generate a new one, which it can immediately use to fire off events that will still be delivered to all of its already existing listeners.
+This is again done for protection, by not storing the event type hash, it is easier for us to invalidate a specific consumer API key. It also means that even through changes to the hashing algorithm, we can maintain an accurate list of all existing listeners for a specific event. So, if for example, a service needs to revoke it's API key, we can simply generate a new one, which the service can immediately use to fire off queued events that will be delivered to all of its already registered listeners without a hitch.
 
-For saving the actual event and consumer data to DynamoDB we use KMS to provide encryption for the listener secret (if provided with any). We wouldn't want to save unencrypted keys now, would we?!
+For saving the actual event and consumer data to DynamoDB we use KMS to provide encryption for the listener secret (if provided). We wouldn't want to save any unencrypted keys now would we?!
 
 So, in short the hook registering flow consists of:
 
@@ -98,7 +98,7 @@ So, in short the hook registering flow consists of:
 - A [Lambda function][lambda] that generates hashes for event types
 - A listener registration endpoint in [API Gateway][apigateway]
 - A [Lambda function][lambda] for saving the event and listener data to DynamoDB
-- [KMS][kms] for encrypting listener secret key (if provided)
+- [KMS][kms] for encrypting the listener's secret key (if provided)
 - A [DynamoDB][dynamodb] table for saving the listeners
 
 That is the first step of our service - registering hook listeners.
@@ -123,14 +123,14 @@ For these steps we need the following:
 - A [Lambda function][lambda] that sits on the events table stream and generates the actual request objects for the event
 - A [KMS][kms] library that decrypts our previously encrypted listener secret and signs the request with it
 - A [DynamoDB][dynamodb] table for saving the outgoing requests
-- A [Lambda function][lambda] that sits on the requests table stream and sends out the given requests, saving the responses back to the same table
+- A [Lambda function][lambda] that sits on the requests table stream and sends out the given requests and saves the responses back to the same table
 
 Most of these steps are quite straightforward. They are just Lambda functions that get triggered by either an API Gateway endpoint or by a DynamoDB stream.
 However, there is one exception, which we'll look into now.
 
-##### Request sending lambda
+##### The lambda that sends requests
 
-Most of our lambda functions are quite straight forward, but there is one that I would like to talk a bit more about - the request sending lambda.
+Most of our lambda functions are quite straight forward, but there is this one that I would like to talk a bit more about - the lambda that sends requests.
 
 This Lambda function is in charge of executing the outgoing HTTP requests. It is connected to the requests DynamoDB table via its' stream, listening to new rows being added and triggering a request for each of those. It is also responsible for tracking the HTTP responses for said requests.
 
@@ -139,33 +139,33 @@ There are a few caveats to this:
 1. The Lambda function sits on a DynamoDB stream
 2. The Lambda function triggers HTTP requests
 3. HTTP requests are known to fail
-4. HTTP request responses must be saved irregardless of the response status
+4. HTTP request responses must be saved regardless of the response status
 
-The most important bit from that list is the third point - _HTTP requests are known to fail_. This means, we have to dabble around with our architecture a bit, otherwise we might shoot ourselves in the foot quickly. The problematic part lies in an undocumented _feature_ of DynamoDB streams:
+The most important bit from this list is the third point - _HTTP requests are known to fail_. This means, we have to dabble around with our architecture a bit, otherwise we might shoot ourselves in the foot quickly. The problematic part lies in an undocumented _feature_ of DynamoDB streams:
 
 > If a Lambda function that sits on a DynamoDB stream **SHOULD** exit with an error, then the given Lambda function will be tried again.
 
 This means the Lambda function that handles incoming events from the DynamoDB table stream should never fail, as otherwise we can end up in a deadlock, where one batch of events will get sent over and over again because of the failing Lambda function.
 
-The solution we came up with is actually quite a *cool* one - _if I may so myself_.
+The solution we came up with is actually quite a *cool* one - _if I may say so myself_.
 
-- Lambda function sitting on the DynamoDB stream will receive as many new images from DynamoDB table as possible
-- The function will then check how many different images it received and recursively trigger a new Lambda function N times _(where N is the amount of images received)_
-- After triggering the new Lambda functions the stream Lambda function will **ALWAYS** successfully exit
+- Lambda function sitting on the DynamoDB stream will receive as many new images from DynamoDB table as possible at the moment
+- The function will then check how many different images it received and recursively triggers a second Lambda function N times _(where N is the amount of images received)_
+- After triggering the second (worker) Lambda functions the stream Lambda function will **ALWAYS** exit successfully
 
 With this approach we can rest assured that we trigger as many requests as we are asked, in the shortest possible time. Furthermore, we can also be sure that with each invocation of our stream, a new batch of requests comes in. Finally, the Lambda function that sends out the HTTP request is safe to fail, as in the worst case, we simply have no response written back to our requests DynamoDB table.
 
-In the future we could build a periodic handler that can retry requests that seem to have not succeeded, or offer the option for the user to retrigger a particular request.
+In the future we could build a periodic handler that can retry requests that seem to have not succeeded or offer the option for the user to retrigger a particular request.
 
 ### Conclusion
 
-In this post we looked at a real world example of a microservice built entirely on top of Lambdas and other AWS technologies. The domain for the service, webhooks, is a highly event driven one, which fits perfectly with our chosen approach.
+In this post we looked at a real world example of a microservice built entirely on top of Lambdas and other AWS technologies. The domain for the service and webhooks is a highly event driven one, which fits perfectly with our chosen approach.
 
 We described ways to ensure certain performance characteristics, for example, how event triggering always appears to take near constant time. Furthermore, we analysed how parts of our service interact with one another, what safeguards can be put into place to ensure the stability of the service, as well as the integrity of both data and order of operations.
 
 It is important to note that this service was one of the first to fully embrace the architecture we have proposed for serverless microservices - you can read more about that in [previous posts]({{< ref "lambda-getting-started.md" >}}).
 
-We are really pleased with how easy it was for us to build something as complex as this service on top of the architecture, we are really looking forward to building even more complex ones next. Make sure to keep an eye on this blog for more posts on how we build things and as always, make sure to let us know what you think on [Twitter][twitter]!
+We are really pleased with how easy it was to build something as complex as this service on top of our serverless architecture, we are really looking forward to building even more complex ones next. Make sure to keep an eye on this blog for more posts on how we build things and as always, make sure to let us know what you think on [Twitter][twitter]!
 
 [lambda]: http://docs.aws.amazon.com/lambda/latest/dg/welcome.html
 [dynamodb]: https://aws.amazon.com/documentation/dynamodb/
