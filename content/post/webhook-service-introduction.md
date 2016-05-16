@@ -1,10 +1,10 @@
 +++
-date = "2016-05-12T09:00:00+03:00"
+date = "2016-05-16T12:00:00+03:00"
 
 image = "images/post/webhook-service/architecture.png"
 comments = false
 
-title = "Building webhooks with lambdas"
+title = "Building webhooks with Lambda"
 slug = "building-webhooks-with-lambdas"
 author = "mikk"
 tags = ["lambdahype", "dynamodb", "webhooks"]
