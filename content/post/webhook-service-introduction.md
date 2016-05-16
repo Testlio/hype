@@ -165,7 +165,7 @@ We described ways to ensure certain performance characteristics, for example, ho
 
 It is important to note that this service was one of the first to fully embrace the architecture we have proposed for serverless microservices - you can read more about that in [previous posts]({{< ref "lambda-getting-started.md" >}}).
 
-We are really pleased with how easy it was for us to build something as complex as this service on top of the architecture, we are really looking forward to building even more complex ones next. Make sure to keep an eye on this blog for more posts on how we build things and as always, make sure to let us know what you think on [Twitter](twitter)!
+We are really pleased with how easy it was for us to build something as complex as this service on top of the architecture, we are really looking forward to building even more complex ones next. Make sure to keep an eye on this blog for more posts on how we build things and as always, make sure to let us know what you think on [Twitter][twitter]!
 
 [lambda]: http://docs.aws.amazon.com/lambda/latest/dg/welcome.html
 [dynamodb]: https://aws.amazon.com/documentation/dynamodb/
