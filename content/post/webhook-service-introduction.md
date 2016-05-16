@@ -65,7 +65,7 @@ As you can see, the only bridging component between the two flows is a DynamoDB 
 - We get implicit rate-limiting from our DynamoDB tables, meaning if someone attempts to send out too many events at once, they will be rate-limited by the DynamoDB table
 - Separation of concerns - Building a service around DynamoDB streams means we can easily and elegantly separate functionality into the smallest possible functional piece. This gives a huge benefit in terms of understanding and analysing our service
 - Visibility - Since our service is built out of small functional "blocks", we can easily see what each of those blocks are doing. This simplifies bug tracking by quite a bit
-- Scalability - We can set the throughput on each stream separately. We can also set scaling triggers for each API endpoint separately. This means we can scale the service more precisely, which allows for more precise cost optimisation
+- Scalability - We can set the throughput on each stream separately. We can also set scaling triggers for each API endpoint separately. This means we can scale the service more precisely, which allows for more precise cost optimization
 - Stability - If something happens to the streams, we can be sure, once restored, the actions continue where the stream left off. Sure, we might lose a couple of minutes, but once the stream is back up, the events will still be sent out in the correct order
 
 Now, let's dive in and take a closer look at the two main flows of our service.
