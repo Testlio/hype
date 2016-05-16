@@ -28,7 +28,7 @@ At [Testlio][testlio], webhooks are an integral part of our infrastructure. We u
 
 - Integrations with third party systems, such as syncing issues to and from clients issue trackers
 - Reacting to different service defined events, such as creating a new project
-- Connecting services while avoiding [tight coupling](coupling)
+- Connecting services while avoiding [tight coupling][coupling]
 - etc.
 
 ### Requirements for webhook service
