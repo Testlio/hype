@@ -147,7 +147,7 @@ Building on top of that, we could also start automating these processes, by usin
 
 As an alternative, we could also build something on top of CloudWatch, that would help us analyse our log files across our entire stack. Services such as [Logstash](https://www.elastic.co/products/logstash) can be utilised to collect and analyse log files more in-depth than CloudWatch allows.
 
-Furthermore, if we were to enforce a common logic to what is logged out, for example making sure that JSON objects are logged out instead of just strings. Given that, we could use advanced features of CloudWatch to not only filter based on strings, but also based on key paths and values in our logs. These values could then be used to create graphs and metrics, which could allow us to quickly identify problems by having patterns emerge faster.
+In addition, enforcing a common structure in our logs, for example, making all log output be in JSON, allows us to use advanced features in CloudWatch to not only filter by strings, but also by values and key paths in the JSON. These extracted values could then be used to create graphs and metrics, which could allow us to quickly identify problems by having patterns emerge faster.
 
 ## Conclusion
 
