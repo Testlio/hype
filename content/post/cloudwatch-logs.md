@@ -1,7 +1,7 @@
 +++
 author = "henri"
 comments = false
-date = "2016-07-01T11:01:38+03:00"
+date = "2016-07-01T11:00:00+03:00"
 title = "Taming logs with CloudWatch"
 image = "images/post/cloudwatch-logs/cover.png"
 
