@@ -14,11 +14,11 @@ One of the requirements highlighted by the [Serverless Manifesto](http://serverl
 
 <!--more-->
 
-Luckily for us, AWS Lambda already does a lot towards enabling this, by sending all of its logs __automatically__ to [CloudWatch](https://aws.amazon.com/cloudwatch/). In this post, we'll look at how to interact with the logs that we produce, and what kind of improvements could we do to our approach.
+Luckily for us, AWS Lambda already does a lot towards enabling this, by sending all of its logs __automatically__ to [CloudWatch](https://aws.amazon.com/cloudwatch/). In this post, we'll look at how to interact with the logs and what kind of improvements we could make to our approach.
 
 **Note about assumptions**
 
-Throughout this post, we'll interact with CloudWatch under the assumption that it has some logs from any number of Lambda functions. If you don't have any Lambda functions set up, you can use one of the blueprints and simply add some logging statements to it, or you can refer to our example service we created in one of [previous posts]({{< ref "lambda-service-example.md" >}}).
+Throughout this post, we'll interact with CloudWatch under the assumption that it has some logs from any number of Lambda functions. If you don't have any Lambda functions set up, you can use one of the blueprints and simply add some logging statements to it, or you can refer to our example service we created in one of [our previous posts]({{< ref "lambda-service-example.md" >}}).
 
 ## Logs in AWS Console
 
@@ -26,23 +26,23 @@ One of the easiest ways of browsing the produced log output is via the [AWS Mana
 
 {{< figure src="/images/post/cloudwatch-logs/list-log-groups.png" caption="All log groups that correspond to our example Lambda service endpoints" >}}
 
-If we open one of these groups, we see the __streams__ that are in this group. For Lambda functions, each of these streams represents a lifetime of a specific function instance. It is important to mention, looking at these streams, we can get a glimpse into how Lambda operates, how a single instance is sometimes kept around for more than one invocation.
+If we open one of these groups, we see the __streams__ that are in this group. For Lambda functions, each of these streams represents a lifetime of a specific function instance. It is important to mention, looking at these streams, we get a glimpse of how AWS Lambda operates, how a single instance is sometimes kept around for more than one invocation.
 
 {{< figure src="/images/post/cloudwatch-logs/list-log-streams.png" caption="All log streams corresponding to one of our demo service endpoints" >}}
 
-Side note, based on the usage data that we have gathered at Testlio, there doesn't seem to be a straightforward cut-off point in terms of how long a specific instance is kept alive. However, it seems that as we increase the available memory for the function, it tends to live longer than a single execution more often.
+Side note, based on the usage data that we have gathered at Testlio, there doesn't seem to be a straightforward cut-off point in terms of how long a specific instance is kept alive. In general, the likelihood of a single function instance being invoked multiple times seems to go up as we increase the memory size.
 
-When we open up a specific stream, we can see the log events in chronological order. Among our own log lines, Lambda also includes three types of events, namely `START`, `END` and `REPORT`. These can be quite useful for long-term monitoring, as for example, filtering out only the `REPORT` events allows us to gather information about the execution time and memory usage of our Lambda function.
+When we open up a specific stream, we can see the log events in chronological order. Among our own log lines, Lambda also includes three types of events, namely `START`, `END` and `REPORT`.These can be quite useful for long-term monitoring, as for example, filtering out only the `REPORT` events allows us to gather information about the execution time and memory usage of our Lambda function.
 
 {{< figure src="/images/post/cloudwatch-logs/specific-log-stream.png" caption="Filtered REPORT events in a specific log stream" >}}
 
-Using the AWS console is fine if we don't have much traffic or when we are not looking for anything particular. However, in production environments, it is often cumbersome and time-consuming to use the console to narrow down logs to a specific event in the system, for that, there are tools we will look at next.
+Using the AWS console is fine if we don't have much traffic or when we are not looking for anything particular. However, in production environments, it is often cumbersome and time-consuming to use the AWS console to narrow down logs to a specific event in the system, for that, there are tools we will look at next.
 
 ## Using CLI tools for logs
 
 While there are various different CLI tools available for CloudWatch, in this post, we will focus on a really nice one by Jorge Bastida - [awslogs](https://github.com/jorgebastida/awslogs).
 
-Installing this Python script via pip is a breeze, just run `pip install awslogs --ignore-installed six`. Once it has finished installing, we have access to the main `awslogs` command. For comparison, the steps we took in the previous section can be reduced to three commands with `awslogs`.
+Installing this Python script via [pip](https://pypi.python.org/pypi/pip) is a breeze, just run `pip install awslogs --ignore-installed six`. Once it has finished installing, we have access to the main `awslogs` command. For comparison, the steps we took in the previous section can be reduced to three commands with `awslogs`.
 
 First, listing/filtering log groups can be done by calling `awslogs groups`. This will output all available groups by their name, meaning we can filter over it with other commands, such as `grep`.
 
@@ -109,7 +109,7 @@ $ awslogs get /aws/lambda/device-service-prod-DeviceFilteredGet-1VXYLZSBFBLGS AL
 /aws/lambda/device-service-prod-DeviceFilteredGet-1VXYLZSBFBLGS 2016/06/30/[3]460025f44fc84f66bee35dce7e3e8098 REPORT RequestId: 141d2c66-3ea9-11e6-b716-2f2fe2863b8d	Duration: 541.88 ms	Billed Duration: 600 ms 	Memory Size: 256 MB	Max Memory Used: 44 MB
 ```
 
-This means, that when combined with services such as [Raygun](https://raygun.com), getting logs for specific requests can be quite simple, armed with an endpoint (which converts to a single Lambda function) and a request ID, we can find all of related logs quite quickly.
+This means, that when combined with services such as [Raygun](https://raygun.com), getting logs for specific requests can be quite simple. Armed with an endpoint, which we can map to a single Lambda function, and a request ID, we can find all of related logs quite quickly.
 
 On the other hand, we can also leverage the `--watch` option to keep a specific log group open indefinitely. This can be useful for constantly monitoring a specific resource in our system. This becomes even more useful when combined with `grep`, as that way we can also filter out specific events. In fact, this is really similar to what CloudWatch already offers as part of their Logs Metric Filter offering. This allows us to count the number of occurrences of some filter expression in the log group.
 
