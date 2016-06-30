@@ -139,18 +139,18 @@ Now, armed with the request ID, endpoint and HTTP method, we can look into the l
 
 ## Potential workflows
 
-Are there workflows we can build on top of CloudWatch? For starters, utilising the request ID, we can make sure that our error tracking system (such as Raygun), always includes the request ID in the error that is stores.
+Are there workflows we can build on top of CloudWatch? For starters, we can make sure that our error tracking system (such as Raygun), always includes the request ID in the error that is stores.
 
 This request ID can then be used to trace logs across multiple levels, including API Gateway, as well as the Lambda function. This is quite trivial to achieve, as Lambda exposes this ID on the `context` object, as `context.awsRequestId`.
 
-Building on top of that, we could also start automating these processes, by utilising webhooks from Raygun to capture an error, which can then be supplemented with logs from various streams. The results could then be stored somewhere or simply posted to Slack or sent to an email. As always, this could be built as a simple Lambda backed service.
+Building on top of that, we could also start automating these processes, by using webhooks from Raygun to capture an error, which can then be supplemented with logs from various streams. The results could then be stored somewhere or simply posted to Slack or sent to an email. As always, this could be built as a simple Lambda backed service.
 
-As an alternative, we could also build something on top of CloudWatch that would help us analyse our log files across our entire stack. Services such as [Logstash](https://www.elastic.co/products/logstash) can be utilised to collect and analyse log files more in-depth than CloudWatch allows.
+As an alternative, we could also build something on top of CloudWatch, that would help us analyse our log files across our entire stack. Services such as [Logstash](https://www.elastic.co/products/logstash) can be utilised to collect and analyse log files more in-depth than CloudWatch allows.
 
-Furthermore, if we were to enforce a common logic to what is logged out (for example making sure that JSON objects are logged out instead of just strings), we could use the more advanced features of CloudWatch to not only filter based on strings, but also based on key paths and values in our logs. These values could then be used to create graphs and metrics, which could allow us to more quickly identify problems by seeing patterns emerge faster.
+Furthermore, if we were to enforce a common logic to what is logged out, for example making sure that JSON objects are logged out instead of just strings. We could use advanced features of CloudWatch to not only filter based on strings, but also based on key paths and values in our logs. These values could then be used to create graphs and metrics, which could allow us to quickly identify problems by having patterns emerge faster.
 
 ## Conclusion
 
-The serverless programming model puts a lot of focus on the ability to monitor the execution of our functions. Logging is a crucial part of this monitoring, not only for debugging purposes, but also for understanding usage patterns, prioritising upcoming features etc. With AWS Lambda we get high-level logging _for free_ via CloudWatch, allowing us to capture all of logs in a centralised place that can then be filtered and explored.
+The serverless programming model puts a lot of focus on the ability to monitor the execution of our functions. Logging is a crucial part of this monitoring, not only for debugging purposes, but also for understanding usage patterns, prioritising upcoming features etc. With AWS Lambda, we get high-level logging _for free_ via CloudWatch, allowing us to capture logs in a centralised place that can then be filtered and explored.
 
-Furthermore, as CloudWatch also includes all usage metrics of our AWS resources, we can start combining these with logs to form a detailed look at how our services are operating. Allowing us to not only offer a better product to our customers, but also generate as many fancy graphs and metrics as we want.
+Furthermore, as CloudWatch also includes usage metrics from AWS resources, we can start combining these with logs to form a detailed look at how our services are operating. Allowing us to not only offer a better product to our customers, but also generate as many fancy graphs and metrics as we want.
