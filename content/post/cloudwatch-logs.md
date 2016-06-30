@@ -113,7 +113,7 @@ This means, that when combined with services such as [Raygun](https://raygun.com
 
 On the other hand, we can also leverage the `--watch` option to keep a specific log group open indefinitely. This can be useful for constantly monitoring a specific resource in our system. This becomes even more useful when combined with `grep`, as that way we can also filter out specific events. In fact, this is really similar to what CloudWatch already offers as part of their Logs Metric Filter offering. This allows us to count the number of occurrences of some filter expression in the log group.
 
-Doing something similar locally with `awslogs` is trivial, for example if we wanted to keep an eye on all requests that produce a 500 error on API Gateway, then we could watch a log group and apply our filter via `--filter-pattern` to it. Note, this example relies on API Gateway's ability to [push access logs to CloudWatch](http://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-stage-settings.html#how-to-stage-settings-console)
+Doing something similar locally with `awslogs` is trivial. For example, if we wanted to keep an eye on all requests that produce a 500 error on API Gateway, then we could watch a log group and apply our filter via `--filter-pattern` to it. Note, this example relies on API Gateway's ability to [push access logs to CloudWatch](http://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-stage-settings.html#how-to-stage-settings-console)
 
 ```shell
 $ awslogs get API-Gateway-Execution-Logs_cqy6c35ye6/prod ALL -s="1d ago" --watch --filter-pattern='"Method completed with status: 500"'
