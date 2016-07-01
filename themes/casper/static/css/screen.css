@@ -337,6 +337,12 @@ blockquote cite {
 
 blockquote cite a { font-weight: normal; }
 
+figcaption {
+    font-size: 80%;
+    font-style: italic;
+    text-align: center;
+}
+
 mark {
     background-color: #FFC336;
 }
