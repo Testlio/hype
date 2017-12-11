@@ -528,7 +528,7 @@ body.nav-opened .site-wrapper {
 
 .main-header a.bloglogo {
     text-decoration: none;
-    opacity: 0.65;
+    opacity: 0.8;
 }
 
 .main-nav {
@@ -893,7 +893,7 @@ body.nav-opened .menu-button .word {
     font-weight: 400;
     font-family: "Open Sans", sans-serif;
     letter-spacing: 0.01rem;
-    color: rgba(255,255,255,0.8);
+    color: rgba(255,255,255,0.9);
 }
 
 .no-cover.main-header {
