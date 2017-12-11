@@ -10,11 +10,9 @@ slug = "bug-catching-graphql-tests"
 tags = ["graphql", "testing"]
 +++
 
-Avoiding Test Driven Frustration and making your GraphQL testing experience awesome.
+Having extensive code coverage on your codebases is awesome. In theory, you would put aside a little extra time for writing tests every time you develop a feature, and in return get confidence in your code not breaking now or with future changes.
 
 <!--more-->
-
-Having extensive code coverage on your codebases is awesome. In theory, you would put aside a little extra time for writing tests every time you develop a feature, and in return get confidence in your code not breaking now or with future changes.
 
 In reality, however, giving your codebase the test coverage it deserves (and needs) is extremely time consuming and bugs are likely to still slip through. Ever-changing product and technical requirements make it even harder to maintain the quality of your test coverage. This leads to what I like to call TDF or Test Driven Frustration.
 
