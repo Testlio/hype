@@ -5,7 +5,7 @@ theme = "casper"
 
 [params]
     hideHUGOSupport = true
-    cover = "images/cover.png"
+    cover = "images/cover.jpg"
     ogCover = "images/cover-og.png"
     description = "Engineering at Testlio"
 
