@@ -10,7 +10,7 @@ slug = "bug-catching-graphql-tests"
 tags = ["graphql", "testing"]
 +++
 
-Having extensive code coverage on your codebases is awesome. In theory, you would put aside a little extra time for writing tests every time you develop a feature, and in return get confidence in your code not breaking now or with future changes.
+Having extensive code coverage on your codebase is awesome. In theory, you would put aside a little extra time for writing tests every time you develop a feature, and in return get confidence in your code not breaking now or with future changes.
 
 <!--more-->
 
@@ -23,7 +23,7 @@ A couple of months ago, we started work on a brand new GraphQL API powered by No
 
 > Having high test coverage and keeping it high is cool but it doesn’t matter. What matters is whether or not the tests are catching bugs.
 
-_Note that this article assumes a decent bit of knowledge about GraphQL servers work. If you’re new to GraphQL, I recommend starting with the [official introduction](http://graphql.org/learn/)._
+_Note that this article assumes a decent bit of knowledge about how GraphQL servers work. If you’re new to GraphQL, I recommend starting with the [official introduction](http://graphql.org/learn/)._
 
 ## My solution
 
@@ -42,7 +42,7 @@ Essentially, APIs are functions of the input (for web servers, an HTTP request) 
 
 Of course, with mutations, you also want the right side effects to happen, but this article will not cover testing those.
 
-So, instead of unit tests, I opted for testing full GraphQL queries instead. For any query, given a constant database state, the server should arrive at the same response. As long as all of your used codepaths are covered in the tests, what goes on under the hood simply does not matter.
+So, instead of unit tests, I opted for testing full GraphQL queries instead. For any query, given a constant database state, the server should return the same response. As long as all of your used codepaths are covered in the tests, what goes on under the hood simply does not matter.
 
 ```js
 describe('project query', () => {
@@ -105,7 +105,7 @@ I do think that writing tests using a setup that causes 1% of the database queri
 
 ### The test suites are per GraphQL type
 
-For almost each GraphQL type that in the service's schema, there's one test file, named after the typename. Either the top level Query in my schema is overridden by the test suite to directly reveal the tested type or its parent types are mocked out for that test suite (in a way that the type under testing can be resolved correctly from the mocked parents).
+For almost every GraphQL type that in the service's schema, there's one test file, named after the typename. Either the top level Query in my schema is overridden by the test suite to directly reveal the tested type or its parent types are mocked out for that test suite (in a way that the type under testing can be resolved correctly from the mocked parents).
 
 Every test suite redefines the available resolvers. When testing a type called `Users` that’s accessible from inside type `Project` for example, we would do something like:
 
@@ -187,6 +187,6 @@ For the first time ever, I don’t dread writing tests for my API. That’s a re
 
 The service we built this whole thing for has been at a stable 95-97% lines, functions and statements test coverage since implementing the first types. Whenever this percentage drops, we get a warning in the pull request.
 
-The remaining lines of uncovered code are exclusively things that should actually just be unit tested. we currently have zero unit tests in this codebase and will be adding some to bring coverage up even higher.
+The remaining lines of uncovered code are exclusively things that should actually just be unit tested. We currently have zero unit tests in this codebase and will be adding some to bring coverage up even higher.
 
 If you are currently unhappy with the way you write tests or if you don’t do it at all, I encourage you to ask why. Address the problems you have with it individually, put together a plan to put an end to them, and make your testing awesome. This solution might not be the perfect one for you, but the perfect solution for you _does_ exist. Figure it out and your codebase, coworkers and your very own sanity will thank you.
