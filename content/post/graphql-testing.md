@@ -1,7 +1,7 @@
 +++
 author = "marko"
 comments = false
-date = "2017-12-11T13:00:00+02:00"
+date = "2017-12-11T15:00:00+02:00"
 title = "Writing bug-catching tests for GraphQL servers with almost zero effort"
 image = "images/post/graphql-testing/cover.jpg"
 
