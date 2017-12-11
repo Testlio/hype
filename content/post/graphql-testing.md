@@ -105,7 +105,7 @@ I do think that writing tests using a setup that causes 1% of the database queri
 
 ### The test suites are per GraphQL type
 
-For almost every GraphQL type that in the service's schema, there's one test file, named after the typename. Either the top level Query in my schema is overridden by the test suite to directly reveal the tested type or its parent types are mocked out for that test suite (in a way that the type under testing can be resolved correctly from the mocked parents).
+For almost every GraphQL type that is in the service's schema, there's one test file, named after the typename. Either the top level Query in my schema is overridden by the test suite to directly reveal the tested type or its parent types are mocked out for that test suite (in a way that the type under testing can be resolved correctly from the mocked parents).
 
 Every test suite redefines the available resolvers. When testing a type called `Users` that’s accessible from inside type `Project` for example, we would do something like:
 
