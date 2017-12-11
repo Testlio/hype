@@ -18,10 +18,10 @@ Having extensive code coverage on your codebases is awesome. In theory, you woul
 
 In reality, however, giving your codebase the test coverage it deserves (and needs) is extremely time consuming and bugs are likely to still slip through. Ever-changing product and technical requirements make it even harder to maintain the quality of your test coverage. This leads to what I like to call TDF or Test Driven Frustration.
 
-A couple of months ago, I started work on a brand new GraphQL API powered by Node.js and a MySQL database. Given this clean sheet to work with, I set myself a couple of requirements for how I wanted my tests to work:
+A couple of months ago, we started work on a brand new GraphQL API powered by Node.js and a MySQL database for a new Testlio product offering. Given this clean sheet to work with, I set myself a couple of requirements for how I wanted the service's tests to work:
 
-1. Even though my service is dockerized, the tests should also run outside of Docker. I wanted to just run `npm test`
-2. Tests should be as automatic and fast to write as possible. I want to define things (API queries) that should _work_ and something magical should handle the rest.
+1. Even though the service is dockerized, the tests should also run outside of Docker. I wanted to just run `npm test`. The simpler and quicker testing is, the more you'll do it.
+2. Tests should be as automatic and fast to write as possible. I wanted to define things (API queries) that should _work_ and something magical should handle the rest.
 
 > Having high test coverage and keeping it high is cool but it doesn’t matter. What matters is whether or not the tests are catching bugs.
 
@@ -29,7 +29,7 @@ _Note that this article assumes a decent bit of knowledge about GraphQL servers 
 
 ## My solution
 
-Here are the important and/or interesting points of what I came up with:
+Here's what we did to get rid of the TDF.
 
 * Tests cover everything end-to-end between the received GraphQL query to the fully resolved response object
 * No hardcoded “expected” values
@@ -40,9 +40,11 @@ Here are the important and/or interesting points of what I came up with:
 
 The most common way of writing tests is doing unit tests, which means separately testing small, isolated units of code. I would argue that this is not the way to go for testing servers.
 
-Essentially, APIs are functions of the input (HTTP request) that produce some output (the response). You don’t actually care about having test coverage for each of the individual implementation details. Most commonly, you just care that when making a certain request, the right output is given. Of course, with mutations, you also want the right side effects to happen, but this article will not cover testing those.
+Essentially, APIs are functions of the input (for web servers, an HTTP request) that produce some output (the response). You don’t actually care about having test coverage for each of the individual implementation details. Most commonly, you just care that when making a certain request, the right output is given.
 
-So, instead of unit tests, I opted for testing full GraphQL queries instead. For any query, given a constant database state, the server should arrive at the same response. What goes on under the hood simply does not matter.
+Of course, with mutations, you also want the right side effects to happen, but this article will not cover testing those.
+
+So, instead of unit tests, I opted for testing full GraphQL queries instead. For any query, given a constant database state, the server should arrive at the same response. As long as all of your used codepaths are covered in the tests, what goes on under the hood simply does not matter.
 
 ```js
 describe('project query', () => {
@@ -73,37 +75,41 @@ describe('project query', () => {
 
 ### Snapshot testing… but for the API
 
-As I stated before, I didn’t want to hardcode the “expected results” of queries, even though that’s the most common thing to do. Instead, I used a relatively new concept that’s called _snapshot testing_. Basically, it’s writing tests without ever writing tests (what?).
+As I stated before, I didn’t want to hardcode the “expected results” of queries, even though that’s the most common thing to do. Instead, we use a relatively new concept that’s called _snapshot testing_. Basically, it’s writing tests without ever writing tests (what?).
 
-Snapshot testing means defining what you want to work properly (a function call or, say, a GraphQL query), and instead of explicitly asserting that the outcome is what you expect it to be (hardcoding the expected value in your test), you tell the test suite to remember the outcome and make sure it stays the same in the future. The same snapshot assertion is used for asserting both JSON responses and thrown errors (I use [chai-jest-snapshot](https://www.npmjs.com/package/chai-jest-snapshot)). This assumes you first run a test suite when you know the functionality behind it is working properly.
+Snapshot testing means defining what you want to work properly (a function call or, say, a GraphQL query), and instead of explicitly asserting that the outcome is what you expect it to be (hardcoding the expected value in your test), you tell the test suite to remember the outcome and make sure it stays the same in the future. The same snapshot assertion is used for asserting both JSON responses and thrown errors (we use [chai-jest-snapshot](https://www.npmjs.com/package/chai-jest-snapshot)). This assumes you first run a test suite when you know the functionality behind it is working properly.
 
 For confidence, I always review the snapshots generated by my tests to make sure the contents are indeed as expected (but still without stating my expectations in the codebase).
 
 Note that snapshot testing works just as well with RESTful APIs. It still applies that you want to make sure that the result of a query doesn’t change without your knowing.
 
-If you hadn’t heard about snapshot testing before, I encourage you to read either this [introductory article by Riccardo Coppola](https://medium.com/@riccardocoppola/snapshot-testing-and-why-it-makes-sense-a40e7811f4b9) or [this one by the makers of the Jest testing tools](https://facebook.github.io/jest/blog/2016/07/27/jest-14.html). Note that they both talk about utilising snapshot testing on the _frontend_, which is where snapshot testing is actually far more popular than on APIs. The main ideas are identical, though. Instead of snapshotting DOM, I snapshot JSON API responses.
+If you hadn’t heard about snapshot testing before, I encourage you to read either this [introductory article by Riccardo Coppola](https://medium.com/@riccardocoppola/snapshot-testing-and-why-it-makes-sense-a40e7811f4b9) or [this one by the makers of the Jest testing tools](https://facebook.github.io/jest/blog/2016/07/27/jest-14.html). Note that they both talk about utilising snapshot testing on the _frontend_, which is where snapshot testing is actually far more popular than on APIs. The main ideas are identical, though. Instead of snapshotting DOM, we just snapshot JSON API responses.
 
 ### Swapping out the database for tests
 
-As I mentioned earlier, the service I set this stuff up for is backed by a MySQL database. Luckily it’s using a database-agnostic query builder called [knex](http://knexjs.org) for making database calls. This means one can just swap out the knex configuration and generally expect everything to still work, assuming the database used has the same structure.
+As I mentioned earlier, we were setting all this up for testing a service that is backed by a MySQL database. Luckily it’s using a database-agnostic query builder called [knex](http://knexjs.org) for interacting with the database This means one can just swap out the knex configuration and generally expect everything to still work, assuming the database used has the same structure.
 
-The setup is as follows: every time tests are run, the knex instance used by models is swapped out for a new one - one configured to use an [in-memory SQLite database](https://sqlite.org/inmemorydb.html). I use [proxyquire’s](https://github.com/thlorenz/proxyquire) global mocking capabilities for this. Table structures and test data is read from source controlled configuration files and the database is automatically populated with data before running the tests themselves. My models don’t know the difference, the only thing changing is how knex does things internally.
+The setup is as follows: every time tests are run, the knex instance used by models is swapped out for a new one - one configured to use an [in-memory SQLite database](https://sqlite.org/inmemorydb.html). We use [proxyquire’s](https://github.com/thlorenz/proxyquire) global mocking capabilities for this. Table structures and test data is read from source controlled configuration files and the database is automatically populated with data before running the tests themselves. The models don’t know the difference – the only thing changing is how knex does things internally.
 
-This means that the tests are really, really fast, as there is no need to start up a MySQL database for every test run. SQLite doesn’t need a separate process to run in, it’s just some data in memory or on disk. My total test running time is currently under 1 second.
+This means that the tests are really, really fast, as there is no need to start up a MySQL database for every test run. SQLite doesn’t need a separate process to run in, it’s just some data in memory or on disk. The total test running time is currently around 2 seconds – this is for half a year's worth of backend code.
 
-However, using a production-like MySQL test database would be… better. I chose SQLite as the test DB for its ease of use and speed, but for the _best_ testing, your test database’s setup should perfectly mirror your production one.
+#### Caveat with using SQLite
 
-I’ve run into a couple of issues of SQLite not supporting things I was doing in my model code. Even though SQLite and MySQL are both based on the ANSI SQL standard, their capabilities are not identical (syntax is different too, but knex handles that for me). In general, SQLite is less powerful than the more popular MySQL, PostgreSQL etc.
+However, using a production-like MySQL test database would be… better. We chose SQLite as the test DB for its ease of use and speed, but for better accuracy, your test database’s setup should perfectly mirror your production one.
 
-This has meant, on one occasion, refactoring some date-related queries in my model to make sure it’s simple enough for SQLite. Of course, when setting this up, I anticipated that such problems might arise. There can be cases when complicated queries work in MySQL but not with SQLite. You’re unlikely to have the same commands act different on different servers, but rather, the actual set of functionality available can differ, causing errors about unknown commands to be thrown by SQLite.
+We’ve run into a couple of issues of SQLite not supporting things we were doing in model code. Even though SQLite and MySQL are both based on the ANSI SQL standard, their capabilities are not identical (syntax is different too, but knex handles that for me). In general, SQLite is less powerful than the more popular MySQL, PostgreSQL etc.
+
+This has meant, on one occasion, refactoring some date-related queries in model functions to make sure it’s simple enough for SQLite. Of course, when setting this up, we did anticipate that such problems might arise. There can be cases when complicated queries work in MySQL but not with SQLite. You’re unlikely to have the same commands act different on different servers, but rather, the actual set of functionality available can differ, causing errors about unknown commands to be thrown by SQLite.
 
 If you’re writing sane code and aren’t doing the most complicated things in the world with your database, you shouldn’t actually run into any problems and this approach will work beautifully. You should (maybe) be writing database-agnostic SQL anyway. See [Writing SQL that works on PostgreSQL, MySQL and SQLite by Evert Pot](https://evertpot.com/writing-sql-for-postgres-mysql-sqlite/).
 
+I do think that writing tests using a setup that causes 1% of the database queries to be untestable is still awesome if it increases your overall coverage significantly (it did for us).
+
 ### The test suites are per GraphQL type
 
-For almost each GraphQL type that I have in my schema, I have one test file, named after the type. Either the top level Query in my schema is overridden by the test suite to directly reveal the tested type or its parent types are mocked out for that test suite (in a way that the type that should be tested is can still be resolved correctly from the parents).
+For almost each GraphQL type that in the service's schema, there's one test file, named after the typename. Either the top level Query in my schema is overridden by the test suite to directly reveal the tested type or its parent types are mocked out for that test suite (in a way that the type under testing can be resolved correctly from the mocked parents).
 
-Every test suite redefines the resolvers available. If I want to test a type called `Users` that’s accessible from inside type `Project` for example, I would do something like:
+Every test suite redefines the available resolvers. When testing a type called `Users` that’s accessible from inside type `Project` for example, we would do something like:
 
 ```js
 const { graphql } = require('graphql');
@@ -144,9 +150,9 @@ const result = await graphql(schema, query);
 
 ### Database contents per test suite
 
-As I started building out my API, I noticed that the test database configuration (file that defined all table structures and contents of the test database) was getting really big. Different tests needed different sets of data but everything was global for me, meaning when _test_1_ needed more rows in the database, _test_2_ would also get them. This resulted in snapshots that were breaking just because of data changes.
+As we started building out the API, we noticed that the test database configuration (file that defined all table structures and contents of the test database) was getting really big. Different tests needed different sets of data but everything in the initial approach, meaning when _test\_1_ needed more rows in the database, _test\_2_ would also get them. This resulted in snapshots that were breaking just because of data changes.
 
-To solve this problem, I now give each test suite its own database. Technically the same knex instance is always used but its contents are truncated at the beginning of each test suite (using [Mocha’s](https://mochajs.org) `before` hook). Then, rows defined in the same test file are loaded into the database before carrying on with running the tests.
+To solve this problem, we now give each test suite its own database. Technically the same knex instance is always used but its contents are truncated at the beginning of each test suite (using [Mocha’s](https://mochajs.org) `before` hook). Then, rows defined in the actual test file are loaded into the database before carrying on with running the tests.
 
 ```js
 // Since every test's needs are different, every
@@ -179,12 +185,10 @@ describe('some query', () => {
 
 ## How has it been?
 
-For the first time ever, I don’t dread writing tests for my API. That’s a really big deal. When you make writing good tests easy, it’s be easier to get high test coverage.
+For the first time ever, I don’t dread writing tests for my API. That’s a really big deal. When you make writing good tests easy, you'll immediately notice the test coverage going up through the roof.
 
-The service I made this whole thing for has been at a stable 95-97% lines, functions and statements test coverage since I implemented the first types. Whenever this percentage drops, I get a warning in the pull request.
+The service we built this whole thing for has been at a stable 95-97% lines, functions and statements test coverage since implementing the first types. Whenever this percentage drops, we get a warning in the pull request.
 
-The remaining lines of uncovered code are exclusively things that should actually just be unit tested. I currently have zero unit tests in this codebase and will be adding some to bring coverage up even higher.
+The remaining lines of uncovered code are exclusively things that should actually just be unit tested. we currently have zero unit tests in this codebase and will be adding some to bring coverage up even higher.
 
-Now, having high test coverage and it being easy to keep it high is cool. It doesn’t matter, though. What really matters is whether or not the tests are catching bugs. For me, this approach has been effective in letting no bugs slip through. In my days of unit testing API servers, this was not something I ever experienced.
-
-If you are currently unhappy with the way you write tests or if you don’t do it at all, I encourage you to ask why. Address the problems you have with it individually, put together a plan to put an end to them, and make your testing awesome. My solution might not be the perfect one for you, but the perfect solution for you _does_ exist. Figure it out and your codebase, coworkers and your very own sanity will thank you.
+If you are currently unhappy with the way you write tests or if you don’t do it at all, I encourage you to ask why. Address the problems you have with it individually, put together a plan to put an end to them, and make your testing awesome. This solution might not be the perfect one for you, but the perfect solution for you _does_ exist. Figure it out and your codebase, coworkers and your very own sanity will thank you.
