@@ -85,7 +85,7 @@ If you hadn’t heard about snapshot testing before, I encourage you to read eit
 
 ### Swapping out the database for tests
 
-As I mentioned earlier, we were setting all this up for testing a service that is backed by a MySQL database. Luckily it’s using a database-agnostic query builder called [knex](http://knexjs.org) for interacting with the database This means one can just swap out the knex configuration and generally expect everything to still work, assuming the database used has the same structure.
+As I mentioned earlier, we were setting all this up for testing a service that is backed by a MySQL database. Luckily it’s using a database-agnostic query builder called [knex](http://knexjs.org) for interacting with the database. This means one can just swap out the knex configuration and generally expect everything to still work, assuming the database used has the same structure.
 
 The setup is as follows: every time tests are run, the knex instance used by models is swapped out for a new one - one configured to use an [in-memory SQLite database](https://sqlite.org/inmemorydb.html). We use [proxyquire’s](https://github.com/thlorenz/proxyquire) global mocking capabilities for this. Table structures and test data is read from source controlled configuration files and the database is automatically populated with data before running the tests themselves. The models don’t know the difference – the only thing changing is how knex does things internally.
 
