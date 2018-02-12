@@ -134,6 +134,9 @@ All the timing info is given in nanoseconds and as an offset from the original s
 Enabling tracing is simple, when using Apollo Server, it is literally a single line. Once enabled, all of our requests start returning the tracing data in the response. For our needs, we did have to put in a bit more effort, as we didn't want to actually send the tracing data to the client, instead, we wanted to log the data out on the server-side.
 
 ```js
+const { graphqlKoa } = require('apollo-server-koa');
+const { TraceCollector, instrumentSchemaForTracing, formatTraceData } = require('apollo-tracing');
+
 const graphqlHandler = graphqlKoa(request => ({
     schema: instrumentSchemaForTracing(schema),
     context: request
