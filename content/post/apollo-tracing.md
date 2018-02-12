@@ -190,12 +190,12 @@ We can then combine several of these graphs (adding graphs that focus on named q
 
 {{< figure src="/images/post/graphql-tracing/dashboard_example.png" caption="An example of the kind of dashboards we can create for our GraphQL services" >}}
 
-One of the things tracing is missing are errors. We ended up also implementing a simple error middleware for our server that simply logs out the resolver name/title and the error that happened. Combining the two approaches allows us to also track the most problematic resolvers (a combination of slow and most erroneous resolvers).
+One of the things tracing is missing are errors (also discussed in the [issue mentioned above](https://github.com/apollographql/graphql-tools/issues/358)). We ended up also implementing a simple error middleware for our server that simply logs out the resolver name/title and the error that happened. Combining the two approaches allows us to also track the most problematic resolvers (a combination of slow and most erroneous resolvers).
 
 ### Summary
 
-Keeping a keen eye on the life of our backend services is important. Not only is important as a "peace of mind" tool, it is also a handy way of extending the reach of our analytics tools.
+Keeping a keen eye on the life of our backend services is important. Not only is it an important "peace of mind" tool, it is also a handy way of extending the reach of our analytics tools.
 
 With Apollo Tracing, we get a level of granularity for our logs that is almost impossible to get with a similar REST stack. This new level of detail allows prioritising engineering efforts, while gauging the return on various fixes and improvements.
 
-What we covered in this post has allowed us to not only prioritise our engineering efforts, but also help provide an input to our product decisions, based on what parts of our apps get used the most. Of course, this is only the first step, as any data scientist would tell you, the real art is in separating the signal from the noise and making sense to the data we see.
+What we covered in this post has allowed us to not only provide meaningful feedback on our tech-debt priorities, but also help provide an input to our product decisions, based on what parts of our apps get used the most. Of course, this is only the first step; as any data scientist would tell you, the real art is in separating the signal from the noise and making sense to the data we see.
