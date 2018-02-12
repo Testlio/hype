@@ -2,7 +2,7 @@
 author = "henri"
 comments = false
 date = "2018-02-12T09:00:00+02:00"
-title = "Monitoring GraphQL services with Apollo tracing and SumoLogic"
+title = "Monitoring GraphQL services with Apollo tracing and Sumo Logic"
 image = "images/post/graphql-tracing/cover.jpg"
 
 share = true
@@ -14,7 +14,7 @@ Continuing on from our series on [serverless monitoring]({{< ref "serverless-mon
 
 <!--more-->
 
-_Preface: This post assumes that we are using [Apollo](https://www.apollographql.com) as our GraphQL server and [SumoLogic](https://www.sumologic.com) to manage our logs. Based on a quick web search, similar solutions can also be built on top of Elasticsearch/Logstash (by using [Kibana](https://www.elastic.co/products/kibana)) and other similar log management tools. The only real requirement is the ability to effectively filter logs and build dashboards on top of the results._
+_Preface: This post assumes that we are using [Apollo](https://www.apollographql.com) as our GraphQL server and [Sumo Logic](https://www.sumologic.com) to manage our logs. Based on a quick web search, similar solutions can also be built on top of Elasticsearch/Logstash (by using [Kibana](https://www.elastic.co/products/kibana)) and other similar log management tools. The only real requirement is the ability to effectively filter logs and build dashboards on top of the results._
 
 There are several well-written posts out there covering the benefits of using GraphQL (such as [this post](https://philsturgeon.uk/api/2017/01/24/graphql-vs-rest-overview/)), so we won't spend any time on that.
 
@@ -164,11 +164,11 @@ const graphqlHandlerWithLogging = async(ctx, next) => {
 
 Our route handled in Koa ended up looking something like the snippet above. We are using the [Koa flavoured Apollo Server](https://github.com/apollographql/apollo-server) and the generic [apollo-tracing](https://github.com/apollographql/apollo-tracing-js) package. Notice that we can simply log out the tracing data instead of embedding it in the query result - this keeps our responses small, whilst giving us a full access to the tracing data in the logs.
 
-### Analysing the logs with SumoLogic
+### Analysing the logs with Sumo Logic
 
-Next step in our monitoring/analytics pipeline is to gather information across all the logs our service produces. We use [SumoLogic](https://www.sumologic.com) as our log management tool, but this should be doable on other platforms as well.
+Next step in our monitoring/analytics pipeline is to gather information across all the logs our service produces. We use [Sumo Logic](https://www.sumologic.com) as our log management tool, but this should be doable on other platforms as well.
 
-SumoLogic allows parsing and analysing logs with a relatively straightforward query language. For example, we can easily track the time it takes to resolve different properties in our GraphQL schema with the following query:
+Sumo Logic allows parsing and analysing logs with a relatively straightforward query language. For example, we can easily track the time it takes to resolve different properties in our GraphQL schema with the following query:
 
 ```json
 json auto
