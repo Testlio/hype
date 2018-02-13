@@ -1,7 +1,7 @@
 +++
 author = "henri"
 comments = false
-date = "2018-02-12T09:00:00+02:00"
+date = "2018-02-13T09:00:00+02:00"
 title = "Monitoring GraphQL services with Apollo tracing and Sumo Logic"
 image = "images/post/graphql-tracing/cover.jpg"
 
